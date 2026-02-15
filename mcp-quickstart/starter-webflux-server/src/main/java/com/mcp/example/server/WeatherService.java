@@ -1,4 +1,4 @@
-package com.mcp.example;
+package com.mcp.example.server;
 
 import com.mcp.example.bean.CurrentCondition;
 import com.mcp.example.bean.Weather;

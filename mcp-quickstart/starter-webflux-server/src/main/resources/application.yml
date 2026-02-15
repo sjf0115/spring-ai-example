@@ -1,0 +1,14 @@
+server:
+  port: 8000
+
+spring:
+  ai:
+    mcp:
+      server:
+        enabled: true
+        name: weather-mcp-webflux-server
+        version: 1.0.0
+        sse-endpoint: /sse
+        sse-message-endpoint: /mcp/message
+        capabilities:
+          tool: true
