@@ -3,6 +3,7 @@ package com.mcp.example.server;
 import com.mcp.example.bean.CurrentCondition;
 import com.mcp.example.bean.Weather;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -30,8 +31,8 @@ public class WeatherService {
 
     //------------------------------------------------------------------------------------------------------------------
     //  Tool
-    @Tool(description = "根据指定的城市获取天气预报")
-    public String getWeatherByCity(String cityName) {
+    @Tool(name = "weather_by_city", description = "根据指定的城市获取天气预报")
+    public String getWeatherByCity(@ToolParam(description = "获取天气预报的城市", required = true) String cityName) {
         Weather weather = restClient.get()
                 .uri("/{city_name}?format=j1&lang=zh", cityName)
                 .retrieve()
