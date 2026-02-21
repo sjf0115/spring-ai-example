@@ -1,4 +1,4 @@
-package com.dashscope.example;
+package com.llm.example.dashscope;
 
 import com.alibaba.dashscope.aigc.generation.Generation;
 import com.alibaba.dashscope.aigc.generation.GenerationParam;
@@ -12,7 +12,7 @@ import com.alibaba.dashscope.exception.NoApiKeyException;
 import java.util.Arrays;
 
 /**
- * 功能：调用大模型API入门示例
+ * 功能：通过百练 SDK 调用大模型API入门示例
  * 作者：@SmartSi
  * 博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态

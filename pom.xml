@@ -17,6 +17,6 @@
 
     <modules>
         <module>mcp-quickstart/starter-webflux-server</module>
-        <module>dashscope-example</module>
+        <module>llm-example</module>
     </modules>
 </project>
