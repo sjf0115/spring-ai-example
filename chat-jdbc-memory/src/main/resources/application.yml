@@ -1,0 +1,31 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: chat-jdbc-memory
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: qwen2.5:7b             # ← 改这里就切换模型
+          temperature: 0.75
+          top-p: 0.9
+          max-tokens: 4096
+    chat:
+      # ChatMemory
+      memory:
+          repository:
+            jdbc:
+              # 是否对数据库进行初始化：embedded-仅初始化嵌入数据库，always：初始化所有数据库, never: 不初始化
+              initialize-schema: always
+              # 初始化数据库脚本的路径
+              schema: classpath:org/springframework/ai/chat/memory/repository/jdbc/schema-mysql.sql
+              # 平台(数据库类型)
+              platform: mysql
+  datasource:
+    # MySQL 数据库配置
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/llm?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true
+    username: root
+    password: root
