@@ -2,6 +2,7 @@ package com.example.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,16 +25,26 @@ public class ChatController {
     private ChatClient chatClient;
 
     @GetMapping("/chat")
-    public String chat(@RequestParam(value = "message", defaultValue = "你是谁") String message) {
-        String response = chatClient.prompt().user(message).call().content();
+    public String chat(@RequestParam(value = "id") String conversationId,
+                       @RequestParam(value = "message", defaultValue = "你是谁") String message) {
+        String response = chatClient
+                .prompt()
+                // 通过监听器传入会话ID
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .user(message)
+                .call()
+                .content();
         log.info("response : {}", response);
         return response;
     }
 
     @GetMapping(value = "/chat/stream", produces = "text/plain;charset=UTF-8")
-    public Flux<String> chatStream(@RequestParam(value = "message", defaultValue = "你是谁") String message) {
+    public Flux<String> chatStream(@RequestParam(value = "id") String conversationId,
+                                   @RequestParam(value = "message", defaultValue = "你是谁") String message) {
         return chatClient
                 .prompt()
+                // 通过监听器传入会话ID
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .user(message)
                 .stream()
                 .content();
