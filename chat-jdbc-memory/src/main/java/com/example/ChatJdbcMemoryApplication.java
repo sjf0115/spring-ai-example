@@ -1,4 +1,4 @@
-package com.example.memory.in;
+package com.example;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * 日期：2026/2/21 19:58
  */
 @SpringBootApplication
-public class ChatInMemoryApplication {
+public class ChatJdbcMemoryApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ChatInMemoryApplication.class, args);
+        SpringApplication.run(ChatJdbcMemoryApplication.class, args);
     }
 }
