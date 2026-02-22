@@ -19,5 +19,6 @@
         <module>mcp-quickstart/starter-webflux-server</module>
         <module>llm-example</module>
         <module>ollama-example</module>
+        <module>spring-ai-quickstart</module>
     </modules>
 </project>
