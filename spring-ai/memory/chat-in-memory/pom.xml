@@ -8,14 +8,15 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <artifactId>chat-jdbc-memory</artifactId>
+    <artifactId>chat-in-memory</artifactId>
     <packaging>jar</packaging>
 
-    <name>jdbc-chat-memory</name>
+    <name>spring-ai-quickstart</name>
     <url>http://maven.apache.org</url>
 
     <properties>
-        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <spring-ai.version>1.1.2</spring-ai.version>
     </properties>
 
@@ -30,19 +31,6 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-ollama</artifactId>
-        </dependency>
-
-        <!-- Chat Memory -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-chat-memory-repository-jdbc</artifactId>
-        </dependency>
-
-        <!-- MySQL 驱动-->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Lombok -->

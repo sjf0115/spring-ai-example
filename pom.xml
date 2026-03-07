@@ -16,10 +16,12 @@
     <name>spring-ai-example</name>
 
     <modules>
-        <module>mcp-quickstart/starter-webflux-server</module>
+        <module>spring-ai/memory/chat-in-memory</module>
+        <module>spring-ai/memory/chat-jdbc-memory</module>
+        <module>spring-ai/mcp/starter-webflux-server</module>
+
+        <module>agentscope/quickstart</module>
         <module>llm-example</module>
         <module>ollama-example</module>
-        <module>chat-in-mempry</module>
-        <module>chat-jdbc-memory</module>
     </modules>
 </project>
