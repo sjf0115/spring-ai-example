@@ -7,22 +7,21 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.11</version>
-        <relativePath />
+        <version>3.5.14</version>
+        <relativePath/>
     </parent>
 
     <artifactId>starter-webflux-server</artifactId>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <spring-ai.version>2.0.0-M2</spring-ai.version>
-        <lombok.version>1.18.26</lombok.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>17</java.version>
+        <spring-ai.version>1.1.5</spring-ai.version>
     </properties>
 
+    <!-- 第二层：导入 Spring AI BOM，管理 AI 生态 -->
     <dependencyManagement>
         <dependencies>
-            <!-- 第二层：导入 Spring AI BOM，管理 AI 生态 -->
             <dependency>
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
@@ -34,10 +33,10 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- Spring Boot 模块：版本由 parent 管理 -->
+        <!-- Spring Boot WebFlux：响应式 Web 服务器 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
         <!-- Spring AI 模块：版本由 BOM 管理 -->
@@ -57,8 +56,29 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>

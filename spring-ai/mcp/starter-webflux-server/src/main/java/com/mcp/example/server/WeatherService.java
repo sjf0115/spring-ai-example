@@ -1,5 +1,6 @@
 package com.mcp.example.server;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mcp.example.bean.CurrentCondition;
 import com.mcp.example.bean.Weather;
 import org.springframework.ai.tool.annotation.Tool;
@@ -24,7 +25,7 @@ public class WeatherService {
     public WeatherService() {
         this.restClient = RestClient.builder()
                 .baseUrl(BASE_URL)
-                .defaultHeader("Accept", "application/geo+json")
+                .defaultHeader("Accept", "application/json")
                 .defaultHeader("User-Agent", "WeatherApiClient/1.0 (your@email.com)")
                 .build();
     }
@@ -33,10 +34,21 @@ public class WeatherService {
     //  Tool
     @Tool(name = "get_weather", description = "获取指定中国城市的当前天气信息。输入为城市中文名（如 北京、上海、杭州）返回包含温度、湿度、天气状况、风速等信息的格式化字符串。")
     public String getWeatherByCity(@ToolParam(description = "获取天气预报的城市", required = true) String cityName) {
-        Weather weather = restClient.get()
+        // wttr.in 返回 JSON 内容但 Content-Type 是 text/plain，
+        // 先用 String 接收，再手动用 ObjectMapper 解析为 Weather
+        String response = restClient.get()
                 .uri("/{city_name}?format=j1&lang=zh", cityName)
                 .retrieve()
-                .body(Weather.class);
+                .body(String.class);
+
+        Weather weather;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            weather = mapper.readValue(response, Weather.class);
+        } catch (Exception e) {
+            throw new RuntimeException("解析天气数据失败: " + e.getMessage(), e);
+        }
+
         List<CurrentCondition> conditions = weather.getCurrentConditions();
         if (conditions == null || conditions.isEmpty()) {
             return null;
