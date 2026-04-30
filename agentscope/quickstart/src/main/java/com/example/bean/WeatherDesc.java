@@ -1,4 +1,4 @@
-package com.mcp.example.bean;
+package com.example.bean;
 
 import lombok.Data;
 

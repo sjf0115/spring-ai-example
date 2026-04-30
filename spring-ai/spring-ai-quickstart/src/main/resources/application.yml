@@ -1,0 +1,30 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: spring-ai-quickstart
+  ai:
+    openai:
+      # 配置系统变量
+      api-key: ${DASHSCOPE_API_KEY}
+      # url 后不要加 /v1 , spring ai 会自动添加
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      chat:
+        options:
+          model: qwen3.5-35b-a3b
+          temperature: 0.7
+
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: qwen2.5:7b
+          temperature: 0.75
+          top-p: 0.9
+          max-tokens: 4096
+
+
+
+
+

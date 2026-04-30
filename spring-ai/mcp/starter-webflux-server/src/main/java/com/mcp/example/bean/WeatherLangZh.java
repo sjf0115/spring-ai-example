@@ -10,6 +10,6 @@ import lombok.Data;
  * 日期：2026/2/15 13:05
  */
 @Data
-public class langZh {
+public class WeatherLangZh {
     private String value;
 }

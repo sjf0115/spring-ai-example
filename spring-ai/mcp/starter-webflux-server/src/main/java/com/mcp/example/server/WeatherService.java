@@ -31,7 +31,7 @@ public class WeatherService {
 
     //------------------------------------------------------------------------------------------------------------------
     //  Tool
-    @Tool(name = "weather_by_city", description = "根据指定的城市获取天气预报")
+    @Tool(name = "get_weather", description = "获取指定中国城市的当前天气信息。输入为城市中文名（如 北京、上海、杭州）返回包含温度、湿度、天气状况、风速等信息的格式化字符串。")
     public String getWeatherByCity(@ToolParam(description = "获取天气预报的城市", required = true) String cityName) {
         Weather weather = restClient.get()
                 .uri("/{city_name}?format=j1&lang=zh", cityName)

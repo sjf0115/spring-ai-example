@@ -2,12 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<!--<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.2</version>
-		<relativePath/> &lt;!&ndash; lookup parent from repository &ndash;&gt;
-	</parent>-->
 
 	<groupId>com.example</groupId>
 	<artifactId>spring-ai-example</artifactId>
@@ -19,9 +13,10 @@
         <module>spring-ai/memory/chat-in-memory</module>
         <module>spring-ai/memory/chat-jdbc-memory</module>
         <module>spring-ai/mcp/starter-webflux-server</module>
-
+        <module>spring-ai/spring-ai-quickstart</module>
         <module>agentscope/quickstart</module>
         <module>llm-example</module>
         <module>ollama-example</module>
+        <module>spring-ai</module>
     </modules>
 </project>

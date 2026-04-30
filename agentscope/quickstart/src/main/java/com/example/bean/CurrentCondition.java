@@ -1,4 +1,4 @@
-package com.mcp.example.bean;
+package com.example.bean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -25,7 +25,7 @@ public class CurrentCondition {
     private String uvIndex;
     private String visibility;
     @JsonProperty(value = "lang_zh")
-    private List<WeatherLangZh> langZh;
+    private List<LangZh> langZh;
     private String winddir16Point;
     private String windspeedKmph;
 }

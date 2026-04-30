@@ -1,5 +1,6 @@
 package com.example.toolkit;
 
+import com.example.bean.Constant;
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.MsgRole;
@@ -20,7 +21,7 @@ public class SimpleToolExample {
         // 1. 选择模型
         DashScopeChatModel model = DashScopeChatModel.builder()
                 .apiKey(System.getenv("DASHSCOPE_API_KEY"))
-                .modelName("qwen3-max-2026-01-23")
+                .modelName(Constant.MODEL_NAME)
                 .build();
 
         // 2. 注册工具
@@ -39,9 +40,10 @@ public class SimpleToolExample {
                 .role(MsgRole.USER)
                 .textContent("今天北京的天气如何")
                 .build();
-
         Msg response = agent.call(msg).block();
-        System.out.println(response.getTextContent());
+        if (response != null) {
+            System.out.println(response.getTextContent());
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------------
