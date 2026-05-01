@@ -15,7 +15,7 @@ import java.util.Map;
  * 公众号：大数据生态
  * 日期：2026/2/15 14:31
  */
-public class McpClient {
+public class McpSseClient {
     public static void main(String[] args) {
         // 1. 创建 SSE 传输层，指向 MCP Server
         WebFluxSseClientTransport transport = new WebFluxSseClientTransport(

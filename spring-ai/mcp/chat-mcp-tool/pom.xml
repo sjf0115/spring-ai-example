@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <!-- 第一层：Spring Boot 父 POM，管理 Boot 生态 -->
@@ -11,7 +9,8 @@
         <relativePath/>
     </parent>
 
-    <artifactId>starter-webflux-server</artifactId>
+    <artifactId>chat-mcp-tool</artifactId>
+    <name>chat-mcp-tool</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -32,30 +31,31 @@
         </dependencies>
     </dependencyManagement>
 
+    <!-- 依赖 -->
     <dependencies>
-        <!-- Spring Boot WebFlux：响应式 Web 服务器 -->
+        <!-- Spring Boot Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring AI 模块：版本由 BOM 管理 -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-mcp-server-webflux</artifactId>
-        </dependency>
-
-        <!-- Spring AI 模块：OpenAI协议 模型 -->
+        <!-- Spring AI OpenAI协议 模型 -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
 
-        <!-- Lombok -->
+        <!-- Spring AI MCP Client WebFlux -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client-webflux</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 
@@ -88,5 +88,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

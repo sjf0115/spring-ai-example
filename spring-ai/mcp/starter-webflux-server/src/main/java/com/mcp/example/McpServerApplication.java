@@ -1,5 +1,6 @@
-package com.mcp.example.server;
+package com.mcp.example;
 
+import com.mcp.example.server.WeatherService;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -3,6 +3,7 @@ package com.mcp.example.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mcp.example.bean.CurrentCondition;
 import com.mcp.example.bean.Weather;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
  * 公众号：大数据生态
  * 日期：2026/2/7 20:34
  */
+@Slf4j
 @Service
 public class WeatherService {
     private static final String BASE_URL = "https://wttr.in";
@@ -58,7 +60,7 @@ public class WeatherService {
                     城市: %s
                     天气情况: %s
                     气压: %s（mb）
-                    温度: %s°C (Feels like: %s°C)
+                    温度: %s°C (体感温度: %s°C)
                     湿度: %s%%
                     降水量:%s (mm)
                     风速: %s km/h (%s)
@@ -79,6 +81,7 @@ public class WeatherService {
                 condition.getUvIndex(),
                 condition.getLocalObsDateTime()
         );
+        log.info("天气 MCP 查询结果：{}", result);
         return result;
     }
 

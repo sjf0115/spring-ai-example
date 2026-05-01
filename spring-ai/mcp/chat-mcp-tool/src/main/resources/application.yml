@@ -1,0 +1,27 @@
+server:
+  port: 9999
+
+spring:
+  application:
+    name: chat-mcp-tool
+  ai:
+    # MCP客户端配置
+    mcp:
+      client:
+        enabled: true
+        sse:
+          connections:
+            weather-server:
+              url: http://localhost:8888
+    # 模型配置
+    openai:
+      api-key: ${DASHSCOPE_API_KEY}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      chat:
+        options:
+          model: qwen3.5-35b-a3b
+          temperature: 0.7
+
+
+
+

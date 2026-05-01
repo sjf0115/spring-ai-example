@@ -8,11 +8,12 @@
     </parent>
 
     <artifactId>mcp</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>mcp</name>
 
     <modules>
         <module>starter-webflux-server</module>
+        <module>chat-mcp-tool</module>
     </modules>
 </project>
