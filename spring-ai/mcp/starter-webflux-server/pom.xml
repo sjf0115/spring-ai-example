@@ -45,7 +45,7 @@
             <artifactId>spring-ai-starter-mcp-server-webflux</artifactId>
         </dependency>
 
-        <!-- Spring AI 模块：OpenAI协议 模型 -->
+        <!-- Spring AI 模块：OpenAI协议 模型 使用 Chat 模式用于测试 MCP 功能 -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-openai</artifactId>

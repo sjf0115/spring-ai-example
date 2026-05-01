@@ -1,5 +1,6 @@
 package com.mcp.example.client;
 
+import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.WebFluxSseClientTransport;
 import io.modelcontextprotocol.json.McpJsonMapper;
@@ -23,7 +24,7 @@ public class McpSseClient {
                 McpJsonMapper.createDefault()
         );
         // 2. 创建同步客户端
-        McpSyncClient client = io.modelcontextprotocol.client.McpClient.sync(transport).build();
+        McpSyncClient client = McpClient.sync(transport).build();
 
         // 3. 初始化连接
         client.initialize();

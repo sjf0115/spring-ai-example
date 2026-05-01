@@ -21,7 +21,3 @@ spring:
         options:
           model: qwen3.5-35b-a3b
           temperature: 0.7
-
-
-
-
