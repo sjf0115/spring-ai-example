@@ -11,7 +11,7 @@ import io.agentscope.core.tool.ToolParam;
  * 日期：2026/4/19 18:17
  */
 public class WeatherService {
-    @Tool(description = "获取指定城市的天气")
+    @Tool(name = "get_weather", description = "获取指定城市的天气")
     public String getWeather(@ToolParam(name = "city", description = "城市名称") String city) {
         return city + " 的天气：晴天，25°C";
     }

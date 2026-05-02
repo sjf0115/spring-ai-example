@@ -1,23 +1,18 @@
-package com.example.hook;
+package com.example.model;
 
-import com.example.tool.WeatherService;
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.MsgRole;
 import io.agentscope.core.model.DashScopeChatModel;
-import io.agentscope.core.tool.Toolkit;
 
 /**
- * 功能：MonitoringHook 示例
+ * 功能：DashScope 快速入门
  * 作者：@SmartSi
  * 博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
- * 日期：2026/3/8 12:18
+ * 日期：2026/5/2 09:18
  */
-public class MonitoringHookExample {
-
-
-
+public class DashScopeQuickStart {
     public static void main(String[] args) {
         // 1. 创建模型
         DashScopeChatModel model = DashScopeChatModel.builder()
@@ -26,21 +21,16 @@ public class MonitoringHookExample {
                 .build();
 
         // 2. 创建 Agent
-        Toolkit toolkit = new Toolkit();
-        toolkit.registerTool(new WeatherService());
-
         ReActAgent agent = ReActAgent.builder()
                 .name("Assistant")
                 .model(model)
-                .toolkit(toolkit) // 注册天气查询工具
-                .hook(new MonitoringHook()) // 注册 Hook
                 .build();
 
         // 3. 调用
         Msg response = agent.call(
                 Msg.builder()
                         .role(MsgRole.USER)
-                        .textContent("北京明天天气如何")
+                        .textContent("为什么 1+1=2？")
                         .build()
         ).block();
 
