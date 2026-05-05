@@ -19,6 +19,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <agentscope.version>1.0.12</agentscope.version>
         <lombok.version>1.18.26</lombok.version>
+        <dashscope.version>2.22.9</dashscope.version>
     </properties>
 
     <dependencies>
@@ -27,6 +28,13 @@
             <groupId>io.agentscope</groupId>
             <artifactId>agentscope</artifactId>
             <version>${agentscope.version}</version>
+        </dependency>
+
+        <!-- 阿里云 DashScope SDK（Embedding 功能所需） -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>dashscope-sdk-java</artifactId>
+            <version>${dashscope.version}</version>
         </dependency>
 
         <!-- Lombok -->
