@@ -20,6 +20,7 @@
         <agentscope.version>1.0.12</agentscope.version>
         <lombok.version>1.18.26</lombok.version>
         <dashscope.version>2.22.9</dashscope.version>
+        <openai.version>4.33.0</openai.version>
     </properties>
 
     <dependencies>
@@ -35,6 +36,13 @@
             <groupId>com.alibaba</groupId>
             <artifactId>dashscope-sdk-java</artifactId>
             <version>${dashscope.version}</version>
+        </dependency>
+
+        <!-- OpenAI SDK（OpenAITextEmbedding 所需） -->
+        <dependency>
+            <groupId>com.openai</groupId>
+            <artifactId>openai-java</artifactId>
+            <version>${openai.version}</version>
         </dependency>
 
         <!-- Lombok -->

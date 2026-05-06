@@ -1,4 +1,4 @@
-package com.example.model;
+package com.example.model.chat;
 
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.message.Msg;

@@ -1,10 +1,9 @@
-package com.example.model;
+package com.example.model.chat;
 
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.MsgRole;
 import io.agentscope.core.model.DashScopeChatModel;
-import io.agentscope.core.model.GenerateOptions;
 
 import static com.example.bean.Constant.MODEL_NAME;
 
