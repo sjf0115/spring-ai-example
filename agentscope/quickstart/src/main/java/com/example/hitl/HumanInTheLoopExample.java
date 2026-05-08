@@ -137,7 +137,7 @@ public class HumanInTheLoopExample {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             // 用户输入
-            System.out.print("\nYou: ");
+            System.out.print("\n用户: ");
             String input = scanner.nextLine().trim();
             if (input.equalsIgnoreCase("exit") || input.equalsIgnoreCase("quit")) {
                 System.out.println("Goodbye!");
@@ -151,24 +151,26 @@ public class HumanInTheLoopExample {
             Msg userMsg = Msg.builder()
                     .name("user")
                     .role(MsgRole.USER)
-                    //.content(TextBlock.builder().text(input).build())
                     .textContent(input)
                     .build();
 
             // 调用 Agent
             Msg response = agent.call(userMsg).block();
 
-            // Check if response has pending tool calls (waiting for confirmation)
+            // 检查是否有挂起的工具等待确认
             while (response != null && response.hasContentBlocks(ToolUseBlock.class)) {
                 // 展示待执行的工具
+                System.out.println("==========================================");
                 System.out.println("\n⚠️  Agent 暂停等待确认工具是否调用");
                 List<ToolUseBlock> pending = response.getContentBlocks(ToolUseBlock.class);
                 for (ToolUseBlock tool : pending) {
-                    System.out.println("工具: " + tool.getName() + ", 参数: " + tool.getInput());
+                    System.out.println("工具: " + tool.getName());
+                    System.out.println("参数: " + tool.getInput());
                 }
+                System.out.println("==========================================");
 
                 // 确认是否执行
-                System.out.print("\nConfirm execution? (yes/no): ");
+                System.out.print("\n是否执行？(yes/no): ");
                 String confirmation = scanner.nextLine().trim().toLowerCase();
                 if (confirmation.equals("yes") || confirmation.equals("y")) {
                     // 1. 用户确认，继续执行
@@ -181,13 +183,13 @@ public class HumanInTheLoopExample {
                     Msg cancelResult = createCancelledToolResults(response, agent.getName());
                     response = agent.call(cancelResult).block();
                 } else {
-                    System.out.println("Invalid input. Please enter 'yes' or 'no'.");
+                    System.out.println("无效输入，请输入 yes 或者 no");
                 }
             }
 
             // 最终回答
             if (response != null) {
-                System.out.println("\nAgent: " + response.getTextContent());
+                System.out.println("\n助手: " + response.getTextContent());
             }
         }
     }
