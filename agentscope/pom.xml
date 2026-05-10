@@ -8,6 +8,10 @@
     </parent>
 
     <artifactId>agentscope</artifactId>
+    <packaging>pom</packaging>
 
     <name>agentscope</name>
+    <modules>
+        <module>spring-ai-alibaba-multi-agent</module>
+    </modules>
 </project>

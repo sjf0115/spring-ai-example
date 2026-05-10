@@ -1,4 +1,4 @@
-package com.example;
+package com.example.agent;
 
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.message.Msg;
@@ -19,7 +19,7 @@ public class HelloAgentScope {
                 .name("Assistant")
                 .model(DashScopeChatModel.builder()
                         .apiKey(System.getenv("DASHSCOPE_API_KEY"))
-                        .modelName("qwen3-max-2026-01-23")
+                        .modelName("qwen3-max")
                         .build())
                 .build();
 
