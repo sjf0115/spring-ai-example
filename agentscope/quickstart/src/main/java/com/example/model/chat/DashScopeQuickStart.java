@@ -27,13 +27,11 @@ public class DashScopeQuickStart {
                 .build();
 
         // 3. 调用
-        Msg response = agent.call(
-                Msg.builder()
-                        .role(MsgRole.USER)
-                        .textContent("为什么 1+1=2？")
-                        .build()
-        ).block();
-
+        Msg msg = Msg.builder()
+                .role(MsgRole.USER)
+                .textContent("你好，请用三句话介绍一下 AgentScope Java")
+                .build();
+        Msg response = agent.call(msg).block();
         System.out.println(response.getTextContent());
     }
 }
