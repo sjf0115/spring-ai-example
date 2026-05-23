@@ -14,9 +14,9 @@ import io.agentscope.core.model.OllamaChatModel;
  */
 public class OllamaQuickStart {
     public static void main(String[] args) {
-        // 1. 创建模型（无需 API Key！）
+        // 1. 创建模型
         OllamaChatModel model = OllamaChatModel.builder()
-                .modelName("qwen3:8b")
+                .modelName("qwen2.5:7b")
                 .baseUrl("http://localhost:11434")  // 默认值，可省略
                 .build();
 

@@ -20,7 +20,7 @@ public class EmailService {
             @ToolParam(name = "content", description = "邮件正文") String content,
             @ToolParam(name = "apiKey", description = "邮件服务 API Key") String apiKey) {
         // 使用 apiKey 调用邮件服务
-        log.info("收件人邮箱: {}, 邮件主题：{}, API key: {}", to, subject, content, apiKey);
+        log.info("收件人邮箱: {}, 邮件主题：{}, 邮件正文：{}, API key: {}", to, subject, content, apiKey);
         return "邮件已发送至 " + to;
     }
 }
