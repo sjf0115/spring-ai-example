@@ -47,7 +47,8 @@ public class ToolSuspendExample {
     /**
      * 审批工具：金额超阈值时抛出 ToolSuspendException 挂起，等待外部人工确认
      */
-    public static class ApprovalTool {@Tool(name = "submit_approval", description = "提交审批申请，金额单位元")
+    public static class ApprovalTool {
+        @Tool(name = "submit_approval", description = "提交审批申请，金额单位元")
         public ToolResultBlock submitApproval(@ToolParam(name = "amount", description = "审批金额") double amount) {
             if (amount > 10000) {
                 // 大额审批 → 挂起，由外部人工确认后恢复执行
