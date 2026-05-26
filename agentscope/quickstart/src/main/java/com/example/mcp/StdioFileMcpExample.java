@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.Set;
 
 import static com.example.bean.Constant.MODEL_NAME;
 
@@ -44,6 +46,8 @@ public class StdioFileMcpExample {
         //    npx 会拉起一个子进程，AgentScope 通过标准输入输出与其通信
         McpClientWrapper fsClient = McpClientBuilder.create("fs-mcp")
                 .stdioTransport("npx", "-y", "@modelcontextprotocol/server-filesystem", baseDir)
+                .timeout(Duration.ofSeconds(120))      // 请求超时
+                .initializationTimeout(Duration.ofSeconds(30)) // 初始化超时
                 .buildAsync()
                 .block();
 
@@ -52,6 +56,9 @@ public class StdioFileMcpExample {
             //    registerMcpClient 内部会调用 listTools 并把每个工具适配为 AgentTool
             Toolkit toolkit = new Toolkit();
             toolkit.registerMcpClient(fsClient).block();
+
+            Set<String> toolNames = toolkit.getToolNames();
+            System.out.println("可用工具: " + toolNames);
 
             // 4. 创建 Agent，绑定 toolkit
             ReActAgent agent = ReActAgent.builder()
