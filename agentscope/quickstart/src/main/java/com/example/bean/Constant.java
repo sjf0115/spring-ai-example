@@ -8,5 +8,5 @@ package com.example.bean;
  * 日期：2026/4/20 23:02
  */
 public class Constant {
-    public static String MODEL_NAME = "qwen3.8-flash";
+    public static String MODEL_NAME = "qwen3.8-27b";
 }

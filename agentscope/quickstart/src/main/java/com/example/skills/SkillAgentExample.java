@@ -5,6 +5,7 @@ import io.agentscope.core.memory.InMemoryMemory;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.MsgRole;
 import io.agentscope.core.model.DashScopeChatModel;
+import io.agentscope.core.model.EndpointType;
 import io.agentscope.core.skill.AgentSkill;
 import io.agentscope.core.skill.SkillBox;
 import io.agentscope.core.tool.Toolkit;
@@ -41,6 +42,9 @@ public class SkillAgentExample {
         DashScopeChatModel chatModel = DashScopeChatModel.builder()
                 .apiKey(System.getenv("DASHSCOPE_API_KEY")) // API 密钥
                 .modelName(MODEL_NAME) // 模型名称
+                // qwen3.8 属多模态系列，但 AUTO 启发式不识别 qwen3.8 会误判为纯文本，
+                // 导致 DashScope 返回 "url error, please check url"，故显式指定 MULTIMODAL 端点。
+                .endpointType(EndpointType.MULTIMODAL)
                 .build();
 
         // 5. 创建 Agent
