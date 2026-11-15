@@ -41,13 +41,15 @@ public class StructuredOutputPromptExample {
                 .build();
         Msg msg = agent.call(userMsg, ProductInfo.class).block();
         // 结构化输出
-        ProductInfo result = msg.getStructuredData(ProductInfo.class);
-        System.out.println("产品需求:");
-        System.out.println("  产品类型: " + result.productType);
-        System.out.println("  品牌: " + result.brand);
-        System.out.println("  最小内存: " + result.minRam + " GB");
-        System.out.println("  最大预算: " + result.maxBudget + " 元");
-        System.out.println("  特点: " + result.features);
+        if (msg != null && msg.hasStructuredData()) {
+            ProductInfo result = msg.getStructuredData(ProductInfo.class);
+            System.out.println("产品需求:");
+            System.out.println("  产品类型: " + result.productType);
+            System.out.println("  品牌: " + result.brand);
+            System.out.println("  最小内存: " + result.minRam + " GB");
+            System.out.println("  最大预算: " + result.maxBudget + " 元");
+            System.out.println("  特点: " + result.features);
+        }
     }
 
     // 产品信息

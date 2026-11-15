@@ -1,12 +1,15 @@
 package com.example.output;
 
+import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.MsgRole;
 import io.agentscope.core.model.DashScopeChatModel;
+import io.agentscope.core.model.EndpointType;
 import io.agentscope.core.model.StructuredOutputReminder;
 
 import java.util.List;
@@ -26,6 +29,7 @@ public class StructuredOutputExample {
         DashScopeChatModel model = DashScopeChatModel.builder()
                 .apiKey(System.getenv("DASHSCOPE_API_KEY")) // API 密钥
                 .modelName(MODEL_NAME) // 模型名称
+                .endpointType(EndpointType.MULTIMODAL) // 根据模型选择
                 .build();
 
         // 创建 ReActAgent
@@ -49,41 +53,58 @@ public class StructuredOutputExample {
                 .role(MsgRole.USER)
                 .textContent("请解析以下简历: \n" + resumeText)
                 .build();
-        Msg msg = agent.call(userMsg, Resume.class).block();
-        // 结构化输出
-        Resume resume = msg.getStructuredData(Resume.class);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(resume);
-        System.out.println(jsonString);
+        try {
+            Msg msg = agent.call(userMsg, Resume.class).block();
+            // 结构化输出
+            if (msg == null) {
+                System.out.println("无回复");
+            } else if (!msg.hasStructuredData()) {
+                // 结构化抽取失败，触发降级
+                // ...
+                throw new IllegalStateException("结构化输出未生成");
+            } else {
+                Resume resume = msg.getStructuredData(Resume.class);
+                ObjectMapper objectMapper = new ObjectMapper();
+                String jsonString = objectMapper.writeValueAsString(resume);
+                System.out.println(jsonString);
+            }
+        } catch (Exception e) {
+            System.err.println("处理失败: " + e.getMessage());
+        }
     }
 
-    // 简历
+    @JsonClassDescription("简历")
     public static class Resume {
         public String name; // 姓名
         public String email; // 邮箱
         public String phone; // 手机
         @JsonProperty("experience_years")
+        @JsonPropertyDescription("总工作年限，整数")
         public Integer yearsOfExperience; // 工作年限
         @JsonProperty("experiences")
         public List<WorkExperience> workExperiences; // 工作经验
+        @JsonPropertyDescription("工作技能")
         public List<String> skills; // 技能
+        @JsonPropertyDescription("家庭地址")
         public Address address; // 家庭地址
     }
 
-    // 工作经验
+    @JsonClassDescription("工作经验")
     public static class WorkExperience {
         public String company; // 公司
         public String position; // 职位
-        public String duration; // 工作时长
+        @JsonPropertyDescription("工作年限，整数")
+        public int duration; // 工作年限
         @JsonProperty("start_time")
+        @JsonPropertyDescription("工作开始时间，格式为 yyyy-MM-dd")
         public String startTime; // 工作开始时间
         @JsonProperty("end_time")
+        @JsonPropertyDescription("工作截止时间，格式为 yyyy-MM-dd")
         public String endTime; // 工作截止时间
-        public List<String> responsibilities; // 职责
     }
 
-    // 家庭地址
+    @JsonClassDescription("家庭地址")
     public static class Address {
         public String prov;
         public String city;
