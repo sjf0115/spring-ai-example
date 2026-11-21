@@ -21,7 +21,6 @@
         <lombok.version>1.18.26</lombok.version>
         <dashscope.version>2.22.9</dashscope.version>
         <openai.version>4.33.0</openai.version>
-        <jgit.version>7.4.0.202509020913-r</jgit.version>
     </properties>
 
     <dependencies>
