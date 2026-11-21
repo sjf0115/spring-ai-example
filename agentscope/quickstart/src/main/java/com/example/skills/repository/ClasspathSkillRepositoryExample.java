@@ -25,64 +25,62 @@ import static com.example.bean.Constant.MODEL_NAME;
  * 日期：2026/5/6 16:24
  */
 public class ClasspathSkillRepositoryExample {
-    public static void main(String[] args) {
-        try (ClasspathSkillRepository repository = new ClasspathSkillRepository("skills")) {
-            AgentSkillRepositoryInfo info = repository.getRepositoryInfo();
-            System.out.println("========== ClasspathSkillRepository ==========");
-            System.out.println("type     : " + info.getType());
-            System.out.println("location : " + info.getLocation());
-            System.out.println("writable : " + info.isWritable());   // classpath 仓库通常只读
-            System.out.println("jarEnv   : " + repository.isJarEnvironment());
-            System.out.println("source   : " + repository.getSource());
+    public static void main(String[] args) throws IOException {
+        // 1. 构建 ClasspathSkillRepository
+        ClasspathSkillRepository repository = new ClasspathSkillRepository("skills");
+        AgentSkillRepositoryInfo info = repository.getRepositoryInfo();
+        System.out.println("========== ClasspathSkillRepository ==========");
+        System.out.println("type     : " + info.getType());
+        System.out.println("location : " + info.getLocation());
+        System.out.println("writable : " + info.isWritable());   // classpath 仓库通常只读
+        System.out.println("jarEnv   : " + repository.isJarEnvironment());
+        System.out.println("source   : " + repository.getSource());
 
-            // 2. 全部技能名
-            List<String> names = repository.getAllSkillNames();
-            System.out.println("技能名列表 : " + names);
-            if (names.isEmpty()) {
-                System.out.println("（未加载到任何技能，请确认 classpath:/skills 下存在 <技能目录>/SKILL.md）");
-                return;
-            }
-
-            // 3. 按名精确获取单个技能
-            AgentSkill skill = repository.getSkill("data-analysis");
-            if (skill != null) {
-                System.out.println("精确获取 data-analysis 成功，描述: " + skill.getDescription());
-            } else {
-                System.out.println("未找到名为 data-analysis 的技能");
-            }
-
-            // 4. 把技能挂载进 SkillBox（SkillBox 会把技能作为可激活能力接入 Toolkit）
-            Toolkit toolkit = new Toolkit();
-            SkillBox skillBox = new SkillBox(toolkit);
-            skillBox.registerSkill(skill);
-
-            // 5. 构建 ReActAgent：必须同时传 toolkit 和 skillBox，技能才会被真正激活。
-            ReActAgent agent = ReActAgent.builder()
-                    .name("Friday")
-                    .sysPrompt("You are a helpful assistant called Friday. 当任务匹配已注册技能时，请激活该技能并按其说明执行。")
-                    .model(DashScopeChatModel.builder()
-                            .apiKey(System.getenv("DASHSCOPE_API_KEY"))
-                            .modelName(MODEL_NAME)
-                            .endpointType(EndpointType.MULTIMODAL)
-                            .build())
-                    .toolkit(toolkit)
-                    .skillBox(skillBox)
-                    .memory(new InMemoryMemory())
-                    .build();
-
-            // 6. 运行一个与 data_analysis 技能匹配的真实任务
-            String task = "请使用 data_analysis 技能分析这组数据: 12, 15, 20, 18, 22，"
-                    + "计算均值、中位数、标准差，并给出简要结论。";
-            System.out.println("\n用户: " + task);
-
-            Msg response = agent.call(
-                    Msg.builder().role(MsgRole.USER).textContent(task).build()
-            ).block();
-
-            System.out.println("\n========== Agent 响应 ==========");
-            System.out.println(response != null ? response.getTextContent() : "(无响应)");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        // 2. 全部技能名
+        List<String> names = repository.getAllSkillNames();
+        System.out.println("技能名列表 : " + names);
+        if (names.isEmpty()) {
+            System.out.println("（未加载到任何技能，请确认 classpath:/skills 下存在 <技能目录>/SKILL.md）");
+            return;
         }
+
+        // 3. 按名精确获取单个技能
+        AgentSkill skill = repository.getSkill("data-analysis");
+        if (skill != null) {
+            System.out.println("精确获取 data-analysis 成功，描述: " + skill.getDescription());
+        } else {
+            System.out.println("未找到名为 data-analysis 的技能");
+        }
+
+        // 4. 把技能挂载进 SkillBox（SkillBox 会把技能作为可激活能力接入 Toolkit）
+        Toolkit toolkit = new Toolkit();
+        SkillBox skillBox = new SkillBox(toolkit);
+        skillBox.registerSkill(skill);
+
+        // 5. 构建 ReActAgent：必须同时传 toolkit 和 skillBox，技能才会被真正激活。
+        ReActAgent agent = ReActAgent.builder()
+                .name("Friday")
+                .sysPrompt("You are a helpful assistant called Friday. 当任务匹配已注册技能时，请激活该技能并按其说明执行。")
+                .model(DashScopeChatModel.builder()
+                        .apiKey(System.getenv("DASHSCOPE_API_KEY"))
+                        .modelName(MODEL_NAME)
+                        .endpointType(EndpointType.MULTIMODAL)
+                        .build())
+                .toolkit(toolkit)
+                .skillBox(skillBox)
+                .memory(new InMemoryMemory())
+                .build();
+
+        // 6. 运行一个与 data_analysis 技能匹配的真实任务
+        String task = "请使用 data_analysis 技能分析这组数据: 12, 15, 20, 18, 22，"
+                + "计算均值、中位数、标准差，并给出简要结论。";
+        System.out.println("\n用户: " + task);
+
+        Msg response = agent.call(
+                Msg.builder().role(MsgRole.USER).textContent(task).build()
+        ).block();
+
+        System.out.println("\n========== Agent 响应 ==========");
+        System.out.println(response != null ? response.getTextContent() : "(无响应)");
     }
 }
