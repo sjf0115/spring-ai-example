@@ -1,119 +1,225 @@
 package com.example.skills.repository;
 
+import com.zaxxer.hikari.HikariDataSource;
+import io.agentscope.core.ReActAgent;
+import io.agentscope.core.memory.InMemoryMemory;
+import io.agentscope.core.message.Msg;
+import io.agentscope.core.message.MsgRole;
+import io.agentscope.core.model.DashScopeChatModel;
+import io.agentscope.core.model.EndpointType;
 import io.agentscope.core.skill.AgentSkill;
+import io.agentscope.core.skill.SkillBox;
 import io.agentscope.core.skill.repository.AgentSkillRepositoryInfo;
+import io.agentscope.core.skill.repository.ClasspathSkillRepository;
 import io.agentscope.core.skill.repository.mysql.MysqlSkillRepository;
+import io.agentscope.core.tool.Toolkit;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.sql.DriverManager;
 import java.util.List;
 
+import static com.example.bean.Constant.MODEL_NAME;
+
 /**
- * 功能：从 MySQL 加载/保存技能（MysqlSkillRepository）。
- *      演示完整读写回路：建表 -> 保存一个技能 -> 列出全部技能 -> 按名获取 -> 打印。
- * 前置条件：
- *   - classpath 上需有 MySQL 驱动（本模块未内置，请自行添加 mysql-connector-j 依赖）
- *   - 设置环境变量：
- *     export MYSQL_URL=jdbc:mysql://localhost:3306/?useSSL=false&serverTimezone=Asia/Shanghai
- *     export MYSQL_USER=root
- *     export MYSQL_PASSWORD=your_password
- *     export MYSQL_DB=agentscope_skills   # 可选，默认 agentscope_skills
- *   说明：为了免依赖具体驱动类，本示例用 JDK 动态代理基于 DriverManager 构造了一个
- *   最简 DataSource；生产环境请改用 HikariCP 等连接池。
+ * 功能：从 MySQL 加载/保存技能（MysqlSkillRepository）
  * 作者：@SmartSi
  * 博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
  * 日期：2026/5/6 16:28
  */
 public class MysqlSkillRepositoryExample {
-    public static void main(String[] args) {
-        // 1. 从环境变量读取数据库连接配置，未配置时给出清晰提示并退出
-        String url = System.getenv("MYSQL_URL");
-        if (url == null || url.isBlank()) {
-            System.err.println("未配置 MYSQL_URL 环境变量，无法连接 MySQL。");
-            System.err.println("请先设置（并确保 classpath 上有 MySQL 驱动）：");
-            System.err.println("  export MYSQL_URL=jdbc:mysql://localhost:3306/?useSSL=false&serverTimezone=Asia/Shanghai");
-            System.err.println("  export MYSQL_USER=root");
-            System.err.println("  export MYSQL_PASSWORD=your_password");
+
+    public static void simpleExample() {
+        // 1. 构造 DataSource
+        HikariDataSource ds = new HikariDataSource();
+        // 默认创建到 agentscope 数据库下，自定义数据库无用
+        ds.setJdbcUrl("jdbc:mysql://localhost:3306/agentscope");
+        ds.setUsername("root");
+        ds.setPassword("root");
+
+        // 2. 构建 MysqlSkillRepository
+        // 第二个参数 createIfNotExist = true，会自动创建数据库和表;
+        MysqlSkillRepository repo = new MysqlSkillRepository(ds, true, true);
+        AgentSkillRepositoryInfo info = repo.getRepositoryInfo();
+        System.out.println("========== ClasspathSkillRepository ==========");
+        System.out.println("type     : " + info.getType());
+        System.out.println("location : " + info.getLocation());
+        System.out.println("writable : " + info.isWritable());   // classpath 仓库通常只读
+        System.out.println("source   : " + repo.getSource());
+
+        List<String> names = repo.getAllSkillNames();
+        System.out.println("技能名列表 : " + names);
+        if (names.isEmpty()) {
+            System.out.println("（未加载到任何技能，请确认数据库下存在技能");
             return;
         }
-        String user = System.getenv("MYSQL_USER");
-        String password = System.getenv("MYSQL_PASSWORD");
-        String database = System.getenv().getOrDefault("MYSQL_DB", "agentscope_skills");
 
-        // 2. 构造 DataSource（演示用：基于 DriverManager 的动态代理）
-        DataSource dataSource = createDataSource(url, user, password);
+        // 3. 获取技能
+        AgentSkill skill = repo.getSkill("data-analysis");
+        if (skill != null) {
+            System.out.println("精确获取 data-analysis 成功，描述: " + skill.getDescription());
+        } else {
+            System.out.println("未找到名为 data-analysis 的技能");
+        }
 
-        // 3. 构建 MysqlSkillRepository（表不存在时自动创建，允许写入）
-        try (MysqlSkillRepository repo = MysqlSkillRepository.builder(dataSource)
-                .databaseName(database)
-                .skillsTableName("agent_skills")
-                .resourcesTableName("agent_skill_resources")
+        // 4. 把技能挂载进 SkillBox（SkillBox 会把技能作为可激活能力接入 Toolkit）
+        Toolkit toolkit = new Toolkit();
+        SkillBox skillBox = new SkillBox(toolkit);
+        skillBox.registerSkill(skill);
+
+        // 5. 构建 ReActAgent：必须同时传 toolkit 和 skillBox，技能才会被真正激活。
+        ReActAgent agent = ReActAgent.builder()
+                .name("Friday")
+                .sysPrompt("You are a helpful assistant called Friday. 当任务匹配已注册技能时，请激活该技能并按其说明执行。")
+                .model(DashScopeChatModel.builder()
+                        .apiKey(System.getenv("DASHSCOPE_API_KEY"))
+                        .modelName(MODEL_NAME)
+                        .endpointType(EndpointType.MULTIMODAL)
+                        .build())
+                .toolkit(toolkit)
+                .skillBox(skillBox)
+                .memory(new InMemoryMemory())
+                .build();
+
+        // 6. 运行一个与 data_analysis 技能匹配的真实任务
+        String task = "请使用 data_analysis 技能分析这组数据: 12, 15, 20, 18, 22，"
+                + "计算均值、中位数、标准差，并给出简要结论。";
+        System.out.println("\n用户: " + task);
+
+        Msg response = agent.call(
+                Msg.builder().role(MsgRole.USER).textContent(task).build()
+        ).block();
+
+        System.out.println("\n========== Agent 响应 ==========");
+        System.out.println(response != null ? response.getTextContent() : "(无响应)");
+    }
+
+    public static void builderExample() {
+        // 1. 构造 DataSource
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl("jdbc:mysql://localhost:3306/test");
+        ds.setUsername("root");
+        ds.setPassword("root");
+
+        // 2. 构建 MysqlSkillRepository
+        // 自定义数据库与表名
+        MysqlSkillRepository repo = MysqlSkillRepository.builder(ds)
+                .databaseName("test")
+                .skillsTableName("skills")
+                .resourcesTableName("skill_resources")
                 .createIfNotExist(true)   // 表不存在时自动创建
                 .writeable(true)          // 允许写入
-                .build()) {
+                .build();
 
-            AgentSkillRepositoryInfo info = repo.getRepositoryInfo();
-            System.out.println("========== MysqlSkillRepository ==========");
-            System.out.println("type     : " + info.getType());
-            System.out.println("location : " + info.getLocation());
-            System.out.println("writable : " + info.isWritable());
-            System.out.println("source   : " + repo.getSource());
+        AgentSkillRepositoryInfo info = repo.getRepositoryInfo();
+        System.out.println("========== ClasspathSkillRepository ==========");
+        System.out.println("type     : " + info.getType());
+        System.out.println("location : " + info.getLocation());
+        System.out.println("writable : " + info.isWritable());   // classpath 仓库通常只读
+        System.out.println("source   : " + repo.getSource());
 
-            // 4. 写入一个演示技能（writeable=true 时可写）
-            AgentSkill demo = AgentSkill.builder()
-                    .name("data_analysis")
-                    .description("Use when analyzing data, computing statistics, or generating reports")
-                    .skillContent("# Data Analysis\n来自 MySQL 仓库的演示技能。")
-                    .addResource("references/formulas.md", "# 常用公式\nmean = Σx / n")
-                    .source("mysql-demo")
-                    .build();
-            boolean saved = repo.save(List.of(demo), true); // 第二个参数 true = 覆盖同名技能
-            System.out.println("保存演示技能结果: " + saved);
-
-            // 5. 列出全部技能名并逐个打印
-            List<String> names = repo.getAllSkillNames();
-            System.out.println("技能名列表 : " + names);
-            for (AgentSkill skill : repo.getAllSkills()) {
-                System.out.println("---------- skill: " + skill.getName() + " ----------");
-                System.out.println("description  : " + skill.getDescription());
-                System.out.println("source       : " + skill.getSource());
-                System.out.println("resourcePaths: " + skill.getResourcePaths());
-            }
-
-            // 6. 按名精确获取
-            AgentSkill loaded = repo.getSkill("data_analysis");
-            System.out.println("按名获取 data_analysis: " + (loaded != null ? loaded.getDescription() : "未找到"));
-        } catch (Exception e) {
-            System.err.println("MySQL 技能仓库操作失败: " + e.getMessage());
-            e.printStackTrace();
+        List<String> names = repo.getAllSkillNames();
+        System.out.println("技能名列表 : " + names);
+        if (names.isEmpty()) {
+            System.out.println("（未加载到任何技能，请确认数据库下存在技能");
+            return;
         }
+
+        // 3. 获取技能
+        AgentSkill skill = repo.getSkill("data-analysis");
+        if (skill != null) {
+            System.out.println("精确获取 data-analysis 成功，描述: " + skill.getDescription());
+        } else {
+            System.out.println("未找到名为 data-analysis 的技能");
+        }
+
+        // 4. 把技能挂载进 SkillBox（SkillBox 会把技能作为可激活能力接入 Toolkit）
+        Toolkit toolkit = new Toolkit();
+        SkillBox skillBox = new SkillBox(toolkit);
+        skillBox.registerSkill(skill);
+
+        // 5. 构建 ReActAgent：必须同时传 toolkit 和 skillBox，技能才会被真正激活。
+        ReActAgent agent = ReActAgent.builder()
+                .name("Friday")
+                .sysPrompt("You are a helpful assistant called Friday. 当任务匹配已注册技能时，请激活该技能并按其说明执行。")
+                .model(DashScopeChatModel.builder()
+                        .apiKey(System.getenv("DASHSCOPE_API_KEY"))
+                        .modelName(MODEL_NAME)
+                        .endpointType(EndpointType.MULTIMODAL)
+                        .build())
+                .toolkit(toolkit)
+                .skillBox(skillBox)
+                .memory(new InMemoryMemory())
+                .build();
+
+        // 6. 运行一个与 data_analysis 技能匹配的真实任务
+        String task = "请使用 data_analysis 技能分析这组数据: 12, 15, 20, 18, 22，"
+                + "计算均值、中位数、标准差，并给出简要结论。";
+        System.out.println("\n用户: " + task);
+
+        Msg response = agent.call(
+                Msg.builder().role(MsgRole.USER).textContent(task).build()
+        ).block();
+
+        System.out.println("\n========== Agent 响应 ==========");
+        System.out.println(response != null ? response.getTextContent() : "(无响应)");
     }
 
-    /**
-     * 用 JDK 动态代理构造一个最简 DataSource，getConnection() 委托给 DriverManager。
-     * 仅用于演示，避免编译期依赖具体驱动/连接池；生产环境请用 HikariCP 等。
-     */
-    private static DataSource createDataSource(String url, String user, String password) {
-        return (DataSource) Proxy.newProxyInstance(
-                MysqlSkillRepositoryExample.class.getClassLoader(),
-                new Class<?>[]{DataSource.class},
-                (proxy, method, methodArgs) -> {
-                    switch (method.getName()) {
-                        case "getConnection":
-                            return (methodArgs == null || methodArgs.length == 0)
-                                    ? DriverManager.getConnection(url, user, password)
-                                    : DriverManager.getConnection(url, (String) methodArgs[0], (String) methodArgs[1]);
-                        case "toString":
-                            return "SimpleDataSource(" + url + ")";
-                        case "hashCode":
-                            return System.identityHashCode(proxy);
-                        case "equals":
-                            return proxy == methodArgs[0];
-                        default:
-                            throw new UnsupportedOperationException("不支持的方法: " + method.getName());
-                    }
-                });
+    public static void main(String[] args) {
+//        simpleExample();
+        builderExample();
     }
 }
+
+
+//INSERT INTO skills (name, description, skill_content, source)
+//VALUES (
+//    'data-analysis',
+//            'Use this skill when analyzing tabular data, computing descriptive statistics, or generating simple data reports. It provides common formulas and a CSV reading workflow.',
+//            '# 数据分析技能
+//
+//    本技能用于对表格数据做描述性统计并生成简要报告。
+//
+//            ## 工作流程
+//            1. 读取数据
+//            2. 计算均值 / 方差 / 标准差
+//            3. 总结趋势与异常值
+//
+//            ## 参考资源
+//            - `references/formulas.md`:常用统计公式速查',
+//            'local'
+//);
+//
+//
+//INSERT INTO skill_resources (id, resource_path, resource_content)
+//VALUES (
+//        LAST_INSERT_ID(),
+//    'references/formulas.md',
+//            '# 常用统计公式速查
+//
+//            ## 均值 (Mean)
+//```
+//mean = (x1 + x2 + ... + xn) / n
+//```
+//
+//        ## 方差 (Variance)
+//```
+//variance = Σ(xi - mean)^2 / n
+//```
+//
+//        ## 标准差 (Standard Deviation)
+//```
+//std = sqrt(variance)
+//```
+//
+//        ## 中位数 (Median)
+//- 奇数个:排序后取中间值
+//- 偶数个:排序后取中间两个值的平均
+//
+//## 分位数 (Percentile)
+//```
+//P_k = 排序后第 (k/100 * n) 个位置的值
+//```'
+//        );

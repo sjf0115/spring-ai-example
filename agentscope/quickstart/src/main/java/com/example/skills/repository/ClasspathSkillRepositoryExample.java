@@ -18,11 +18,7 @@ import java.util.List;
 import static com.example.bean.Constant.MODEL_NAME;
 
 /**
- * 功能：从 classpath 加载技能（ClasspathSkillRepository）。
- *      约定：资源目录下每个技能是一个子目录，内含带 YAML frontmatter 的 SKILL.md。
- *      本示例读取 classpath:/skills（对应 src/main/resources/skills），
- *      打印仓库信息、全部技能名，以及每个技能的详细内容。
- * 前置条件：src/main/resources/skills 下已放置样例子目录（如 data-analysis/SKILL.md）。
+ * 功能：从 classpath 加载技能（ClasspathSkillRepository）
  * 作者：@SmartSi
  * 博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
@@ -30,10 +26,7 @@ import static com.example.bean.Constant.MODEL_NAME;
  */
 public class ClasspathSkillRepositoryExample {
     public static void main(String[] args) {
-        // try-with-resources：ClasspathSkillRepository 实现了 AutoCloseable（jar 环境下需关闭 FileSystem）
         try (ClasspathSkillRepository repository = new ClasspathSkillRepository("skills")) {
-
-            // 1. 仓库基本信息
             AgentSkillRepositoryInfo info = repository.getRepositoryInfo();
             System.out.println("========== ClasspathSkillRepository ==========");
             System.out.println("type     : " + info.getType());
@@ -64,7 +57,6 @@ public class ClasspathSkillRepositoryExample {
             skillBox.registerSkill(skill);
 
             // 5. 构建 ReActAgent：必须同时传 toolkit 和 skillBox，技能才会被真正激活。
-            //    显式 MULTIMODAL 端点：qwen3.8 属多模态系列，AUTO 启发式不识别会误判为纯文本导致 url error。
             ReActAgent agent = ReActAgent.builder()
                     .name("Friday")
                     .sysPrompt("You are a helpful assistant called Friday. 当任务匹配已注册技能时，请激活该技能并按其说明执行。")
@@ -77,8 +69,6 @@ public class ClasspathSkillRepositoryExample {
                     .skillBox(skillBox)
                     .memory(new InMemoryMemory())
                     .build();
-
-            System.out.println("\n已注册技能ID : " + skillBox.getAllSkillIds());
 
             // 6. 运行一个与 data_analysis 技能匹配的真实任务
             String task = "请使用 data_analysis 技能分析这组数据: 12, 15, 20, 18, 22，"

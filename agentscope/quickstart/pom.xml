@@ -21,6 +21,7 @@
         <lombok.version>1.18.26</lombok.version>
         <dashscope.version>2.22.9</dashscope.version>
         <openai.version>4.33.0</openai.version>
+        <hikaricp.version>7.1.0</hikaricp.version>
     </properties>
 
     <dependencies>
@@ -31,10 +32,16 @@
             <version>${agentscope.version}</version>
         </dependency>
 
-        <!-- Git Repository -->
+        <!-- Repository -->
         <dependency>
             <groupId>io.agentscope</groupId>
             <artifactId>agentscope-extensions-skill-git-repository</artifactId>
+            <version>${agentscope.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.agentscope</groupId>
+            <artifactId>agentscope-extensions-skill-mysql-repository</artifactId>
             <version>${agentscope.version}</version>
         </dependency>
 
@@ -50,6 +57,12 @@
             <groupId>com.openai</groupId>
             <artifactId>openai-java</artifactId>
             <version>${openai.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${hikaricp.version}</version>
         </dependency>
 
         <!-- Lombok -->
