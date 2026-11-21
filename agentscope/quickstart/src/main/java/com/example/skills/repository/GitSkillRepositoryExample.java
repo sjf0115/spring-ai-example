@@ -25,9 +25,9 @@ import java.util.List;
  */
 public class GitSkillRepositoryExample {
     public static void main(String[] args) {
-        String repoUrl = "git@github.com:sjf0115/spring-ai-example.git";
+        String repoUrl = "https://github.com/sjf0115/spring-ai-example.git";
 
-        // 2. 自动同步模式（默认）：每次读取时检查远端更新
+        // 1. 自动同步模式（默认）：每次读取时检查远端更新
         try (GitSkillRepository repo = new GitSkillRepository(repoUrl)) {
             AgentSkillRepositoryInfo info = repo.getRepositoryInfo();
             System.out.println("========== GitSkillRepository (auto-sync) ==========");
@@ -45,16 +45,16 @@ public class GitSkillRepositoryExample {
                 System.out.println("resourcePaths: " + skill.getResourcePaths());
             }
 
-            AgentSkill one = repo.getSkill(names.isEmpty() ? "data-analysis" : names.get(0));
-            if (one != null) {
-                System.out.println("精确获取技能成功: " + one.getName());
+            AgentSkill skill = repo.getSkill("weekly-report");
+            if (skill != null) {
+                System.out.println("精确获取技能成功: " + skill.getDescription());
             }
         } catch (Exception e) {
             System.err.println("自动同步模式加载失败: " + e.getMessage());
             e.printStackTrace();
         }
 
-        // 3. 手动同步模式：构造时关闭自动同步（第二个参数 false）
+        // 2. 手动同步模式：构造时关闭自动同步（第二个参数 false）
         //    注意：手动模式下「读取前必须先 sync()」，否则 getSkill/getAllSkillNames 等会抛
         //    IllegalStateException("Repository is not synchronized. Call sync() before reading skills.")
         try (GitSkillRepository manualRepo = new GitSkillRepository(repoUrl, false)) {
@@ -64,7 +64,14 @@ public class GitSkillRepositoryExample {
             System.out.println("首次 sync() 后技能名: " + manualRepo.getAllSkillNames());
 
             manualRepo.sync();   // 之后按需再次刷新：仅当远端 HEAD 变化才真正 pull
-            System.out.println("再次 sync() 后技能名: " + manualRepo.getAllSkillNames());
+            List<String> names = manualRepo.getAllSkillNames();
+            System.out.println("技能名列表 : " + names);
+
+            for (AgentSkill skill : manualRepo.getAllSkills()) {
+                System.out.println("---------- skill: " + skill.getName() + " ----------");
+                System.out.println("description  : " + skill.getDescription());
+                System.out.println("resourcePaths: " + skill.getResourcePaths());
+            }
         } catch (Exception e) {
             System.err.println("手动同步模式加载失败: " + e.getMessage());
             e.printStackTrace();
