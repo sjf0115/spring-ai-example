@@ -3,24 +3,26 @@ package com.example.hitl;
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.hook.Hook;
 import io.agentscope.core.hook.HookEvent;
-import io.agentscope.core.hook.PostActingEvent;
 import io.agentscope.core.hook.PostReasoningEvent;
 import io.agentscope.core.memory.InMemoryMemory;
-import io.agentscope.core.message.*;
+import io.agentscope.core.message.GenerateReason;
+import io.agentscope.core.message.Msg;
+import io.agentscope.core.message.MsgRole;
+import io.agentscope.core.message.TextBlock;
+import io.agentscope.core.message.ToolResultBlock;
+import io.agentscope.core.message.ToolUseBlock;
 import io.agentscope.core.model.DashScopeChatModel;
+import io.agentscope.core.model.EndpointType;
 import io.agentscope.core.tool.Tool;
 import io.agentscope.core.tool.ToolParam;
 import io.agentscope.core.tool.Toolkit;
 import reactor.core.publisher.Mono;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 import static com.example.bean.Constant.MODEL_NAME;
 
 /**
- * 功能：Human-in-the-Loop 示例
+ * 功能：Human-in-the-Loop（人工确认）实战示例
  * 作者：@SmartSi
  * 博客：https://smartsi.blog.csdn.net/
  * 公众号：大数据生态
@@ -28,169 +30,94 @@ import static com.example.bean.Constant.MODEL_NAME;
  */
 public class HumanInTheLoopExample {
 
-    // 工具
-    public static class SensitiveTools {
-        // 删除文件
+    /** 需要人工确认的敏感工具名单 */
+    private static final List<String> SENSITIVE_TOOLS = List.of("delete_file");
+
+    /** 模拟人工决策：true = 批准执行，false = 拒绝（改成 false 即可观察「拒绝」分支） */
+    private static final boolean HUMAN_APPROVES = false;
+
+    // 敏感工具：删除文件（真实执行有副作用，故需执行前人工确认）
+    public static class FileTools {
         @Tool(name = "delete_file", description = "Delete a file from the system")
-        public String deleteFile(@ToolParam(name = "filename", description = "Name of the file to delete") String filename) {
-            // Simulated deletion
-            System.out.println("[TOOL] Deleting file: " + filename);
-            return "File '" + filename + "' has been deleted successfully.";
-        }
-
-        // 发送邮件
-        @Tool(name = "send_email", description = "Send an email to a recipient")
-        public String sendEmail(
-                @ToolParam(name = "to", description = "Recipient email address") String to,
-                @ToolParam(name = "subject", description = "Email subject") String subject,
-                @ToolParam(name = "body", description = "Email body content") String body) {
-            // Simulated email sending
-            System.out.println("[TOOL] Sending email to: " + to);
-            System.out.println("[TOOL] Subject: " + subject);
-            return "Email sent successfully to " + to;
-        }
-
-        // 联网查询
-        @Tool(name = "search_web", description = "Search the web for information")
-        public String searchWeb(@ToolParam(name = "query", description = "Search query") String query) {
-            // Simulated web search
-            System.out.println("[TOOL] Searching web for: " + query);
-            return "Search results for '" + query + "': Found 10 relevant articles.";
+        public String deleteFile(
+                @ToolParam(name = "filename", description = "Name of the file to delete") String filename) {
+            System.out.println("[TOOL] 正在删除文件: " + filename);
+            return "文件 '" + filename + "' 已成功删除。";
         }
     }
 
-    // 工具确认Hook
-    private static class ToolConfirmationHook implements Hook {
-        // 定义需要审批的敏感工具名单
-        private static final List<String> SENSITIVE_TOOLS = List.of("delete_file", "send_email");
-
+    // 人工确认 Hook：推理后若命中敏感工具，则暂停 Agent，等待外部人工复核
+    public static class ToolConfirmationHook implements Hook {
         @Override
         public <T extends HookEvent> Mono<T> onEvent(T event) {
-            if (event instanceof PostReasoningEvent postReasoning) {
-                // 1. 推理后暂停
-                Msg reasoningMsg = postReasoning.getReasoningMessage();
-                if (reasoningMsg == null) {
-                    return Mono.just(event);
+            if (event instanceof PostReasoningEvent e) {
+                Msg reasoning = e.getReasoningMessage();
+                if (reasoning != null) {
+                    boolean hasSensitive = reasoning.getContentBlocks(ToolUseBlock.class).stream()
+                            .anyMatch(t -> SENSITIVE_TOOLS.contains(t.getName()));
+                    if (hasSensitive) {
+                        e.stopAgent(); // 暂停：工具不会执行，call() 返回 REASONING_STOP_REQUESTED
+                    }
                 }
-                // 调用的工具
-                List<ToolUseBlock> toolCalls = reasoningMsg.getContentBlocks(ToolUseBlock.class);
-                // 如果包含敏感工具，暂停等待确认
-                boolean hasSensitive = toolCalls.stream().anyMatch(t -> SENSITIVE_TOOLS.contains(t.getName()));
-                if (hasSensitive) {
-                    // 暂停
-                    postReasoning.stopAgent();
-                }
-            } else if (event instanceof PostActingEvent postActing) {
-                // 2. 行动后暂停
             }
             return Mono.just(event);
         }
     }
 
-    private static Msg createCancelledToolResults(Msg toolUseMsg, String agentName) {
-        List<ToolUseBlock> toolCalls = toolUseMsg.getContentBlocks(ToolUseBlock.class);
-        if (toolCalls.isEmpty()) {
-            // Return empty tool message if no tool calls (should not happen in normal flow)
-            return Msg.builder().name(agentName).role(MsgRole.TOOL).build();
-        }
-
-        // Create ToolResultBlock for each pending tool call
-        List<ToolResultBlock> results = new ArrayList<>();
-        for (ToolUseBlock tool : toolCalls) {
-            TextBlock textBlock = TextBlock.builder().text("Operation cancelled by user. Please try a different approach.").build();
-            ToolResultBlock toolResultBlock = ToolResultBlock.of(tool.getId(), tool.getName(), textBlock);
-            results.add(toolResultBlock);
-        }
-
-        Msg msg = Msg.builder()
-                .name(agentName)
-                .role(MsgRole.TOOL)
-                .content(results.toArray(new ToolResultBlock[0]))
-                .build();
-        return msg;
-    }
-
     public static void main(String[] args) {
-        // 工具集
-        Toolkit toolkit = new Toolkit();
-        toolkit.registerTool(new SensitiveTools());
-
-        // 4. 创建对话模型: 使用百练对话模型
-        DashScopeChatModel chatModel = DashScopeChatModel.builder()
-                .apiKey(System.getenv("DASHSCOPE_API_KEY")) // API 密钥
-                .modelName(MODEL_NAME) // 模型名称
+        // 1. 创建模型
+        DashScopeChatModel model = DashScopeChatModel.builder()
+                .apiKey(System.getenv("DASHSCOPE_API_KEY"))
+                .modelName(MODEL_NAME)
+                .endpointType(EndpointType.MULTIMODAL)
                 .build();
 
-        // 5. 创建智能体
+        // 2. 注册工具 + 挂载人工确认 Hook
+        Toolkit toolkit = new Toolkit();
+        toolkit.registerTool(new FileTools());
+
         ReActAgent agent = ReActAgent.builder()
                 .name("SafeAgent")
-                .sysPrompt("You are a helpful assistant with access to file and email tools."
-                        + " Always use the appropriate tool when asked to delete files"
-                        + " or send emails.")
-                .model(chatModel)
+                .sysPrompt("你是一个助手。当用户要求删除文件时，使用 delete_file 工具，并根据工具结果用一句话回复。")
+                .model(model)
                 .toolkit(toolkit)
                 .memory(new InMemoryMemory())
                 .hook(new ToolConfirmationHook())
                 .build();
 
-        // 6. 交互
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            // 用户输入
-            System.out.print("\n用户: ");
-            String input = scanner.nextLine().trim();
-            if (input.equalsIgnoreCase("exit") || input.equalsIgnoreCase("quit")) {
-                System.out.println("Goodbye!");
-                break;
-            }
-            if (input.isEmpty()) {
-                continue;
-            }
+        // 3. 用户请求删除文件
+        Msg response = agent.call(Msg.builder()
+                .role(MsgRole.USER)
+                .textContent("帮我删除 report.pdf")
+                .build()).block();
 
-            // 用户消息
-            Msg userMsg = Msg.builder()
-                    .name("user")
-                    .role(MsgRole.USER)
-                    .textContent(input)
-                    .build();
-
-            // 调用 Agent
-            Msg response = agent.call(userMsg).block();
-
-            // 检查是否有挂起的工具等待确认
-            while (response != null && response.hasContentBlocks(ToolUseBlock.class)) {
-                // 展示待执行的工具
-                System.out.println("==========================================");
-                System.out.println("\n⚠️  Agent 暂停等待确认工具是否调用");
-                List<ToolUseBlock> pending = response.getContentBlocks(ToolUseBlock.class);
-                for (ToolUseBlock tool : pending) {
-                    System.out.println("工具: " + tool.getName());
-                    System.out.println("参数: " + tool.getInput());
-                }
-                System.out.println("==========================================");
-
-                // 确认是否执行
-                System.out.print("\n是否执行？(yes/no): ");
-                String confirmation = scanner.nextLine().trim().toLowerCase();
-                if (confirmation.equals("yes") || confirmation.equals("y")) {
-                    // 1. 用户确认，继续执行
-                    System.out.println("用户已确认, 继续执行...\n");
-                    response = agent.call().block();
-                } else if (confirmation.equals("no") || confirmation.equals("n")) {
-                    // Provide a manual tool result for all pending tools
-                    // 2. 用户拒绝，返回取消信息
-                    System.out.println("用户拒绝.\n");
-                    Msg cancelResult = createCancelledToolResults(response, agent.getName());
-                    response = agent.call(cancelResult).block();
-                } else {
-                    System.out.println("无效输入，请输入 yes 或者 no");
-                }
+        // 4. 若被暂停（REASONING_STOP_REQUESTED），展示待执行工具，模拟人工决策后恢复
+        if (response != null && response.getGenerateReason() == GenerateReason.REASONING_STOP_REQUESTED) {
+            List<ToolUseBlock> pending = response.getContentBlocks(ToolUseBlock.class);
+            System.out.println("====== ⚠️ Agent 已暂停，等待人工确认 ======");
+            for (ToolUseBlock t : pending) {
+                System.out.println("待执行工具: " + t.getName() + "，参数: " + t.getInput());
             }
 
-            // 最终回答
-            if (response != null) {
-                System.out.println("\n助手: " + response.getTextContent());
+            if (HUMAN_APPROVES) {
+                // 用户批准，继续执行
+                System.out.println("人工决策：批准 → 继续执行");
+                response = agent.call().block(); // 无参恢复：真正执行挂起的工具
+            } else {
+                // 用户拒绝，返回取消信息
+                System.out.println("人工决策：拒绝 → 取消操作");
+                Msg cancelResult = Msg.builder()
+                        .role(MsgRole.TOOL)
+                        .content(pending.stream()
+                                .map(t -> ToolResultBlock.of(t.getId(), t.getName(),
+                                        TextBlock.builder().text("操作已取消").build()))
+                                .toArray(ToolResultBlock[]::new))
+                        .build();
+                response = agent.call(cancelResult).block();
             }
         }
+
+        // 5. 最终回答
+        System.out.println("\n助手: " + (response != null ? response.getTextContent() : "(无响应)"));
     }
 }
