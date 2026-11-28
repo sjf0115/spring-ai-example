@@ -3,9 +3,14 @@ package com.example.hook;
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.agent.EventType;
 import io.agentscope.core.agent.StreamOptions;
+import io.agentscope.core.hook.*;
 import io.agentscope.core.message.*;
 import io.agentscope.core.model.DashScopeChatModel;
+import io.agentscope.core.model.EndpointType;
 import io.agentscope.core.model.GenerateOptions;
+import reactor.core.publisher.Mono;
+
+import static com.example.bean.Constant.MODEL_NAME;
 
 /**
  * 功能：示例
@@ -15,6 +20,35 @@ import io.agentscope.core.model.GenerateOptions;
  * 日期：2026/5/2 09:58
  */
 public class ThinkingHookExample {
+    public static class ThinkingHook implements Hook {
+        @Override
+        public <T extends HookEvent> Mono<T> onEvent(T event) {
+            if (event instanceof PreReasoningEvent preReasoning) {
+                // LLM 推理前 - 开始思考
+                String name = preReasoning.getAgent().getName();
+                System.out.println("\n--------------------------------------------");
+                System.out.println("Agent [" + name + "] 开始思考 ....");
+            } else if (event instanceof PostReasoningEvent postReasoning) {
+                // LLM 推理完成后 - 输出思考内容
+                String name = postReasoning.getAgent().getName();
+                Msg reasoningMsg = postReasoning.getReasoningMessage();
+                for (ContentBlock block : reasoningMsg.getContent()) {
+                    if (block instanceof ThinkingBlock thinking) {
+                        System.out.println("\n--------------------------------------------");
+                        System.out.println("Agent [" + name + "] 思考\n" + thinking.getThinking());
+                    }
+                }
+            } else if (event instanceof PostCallEvent postCall) {
+                // Agent 调用完成 - 最终回答
+                String name = postCall.getAgent().getName();
+                String result = postCall.getFinalMessage().getTextContent();
+                System.out.println("\n--------------------------------------------");
+                System.out.println("Agent [" + name + "] 最终回答\n" + result);
+            }
+            return Mono.just(event);
+        }
+    }
+
     public static void main(String[] args) {
         // 1. 创建模型
         DashScopeChatModel model = DashScopeChatModel.builder()
@@ -23,7 +57,8 @@ public class ThinkingHookExample {
                 .defaultOptions(GenerateOptions.builder()
                         .thinkingBudget(500)  // 控制思考 token 预算
                         .build())
-                .modelName("qwen3.6-plus")
+                .modelName(MODEL_NAME)
+                .endpointType(EndpointType.MULTIMODAL)
                 .build();
 
         // 2. 创建 Agent
